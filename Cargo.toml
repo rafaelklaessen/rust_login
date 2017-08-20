@@ -1,0 +1,12 @@
+[package]
+name = "rust_react"
+version = "0.1.0"
+authors = ["Rafael Klaessen <rafaelklaessen.nl@gmail.com>"]
+
+[dependencies]
+iron = "0.5.*"
+router = "*"
+staticfile = "*"
+
+[dependencies.mount]
+git = "https://github.com/iron/mount.git"
