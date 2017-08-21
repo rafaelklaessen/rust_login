@@ -1,5 +1,5 @@
 [package]
-name = "rust_react"
+name = "rust_login"
 version = "0.1.0"
 authors = ["Rafael Klaessen <rafaelklaessen.nl@gmail.com>"]
 
@@ -7,6 +7,9 @@ authors = ["Rafael Klaessen <rafaelklaessen.nl@gmail.com>"]
 iron = "0.5.*"
 router = "*"
 staticfile = "*"
+diesel = { version = "0.15.0", features = ["postgres"] }
+diesel_codegen = { version = "0.15.0", features = ["postgres"] }
+dotenv = "0.9.0"
 
 [dependencies.mount]
 git = "https://github.com/iron/mount.git"
