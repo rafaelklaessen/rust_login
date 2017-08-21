@@ -9,6 +9,7 @@ extern crate dotenv;
 #[macro_use] extern crate diesel_codegen;
 extern crate rustc_serialize;
 extern crate regex;
+extern crate bcrypt;
 
 use std::path::Path;
 use std::fs::File;
