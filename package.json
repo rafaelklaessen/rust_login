@@ -10,8 +10,12 @@
     "build": "brunch build --production"
   },
   "dependencies": {
+    "glamor": "^2.20.40",
+    "glamorous": "^4.2.1",
+    "material-ui": "^0.19.0",
     "react": "^15.4",
-    "react-dom": "^15.4"
+    "react-dom": "^15.4",
+    "react-router": "^4.1.2"
   },
   "devDependencies": {
     "auto-reload-brunch": "^2",
