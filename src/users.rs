@@ -34,7 +34,7 @@ pub fn get_user(conn: &PgConnection, user_id: i32) -> Option<User> {
     }
 }
 
-pub fn get_user_by_username(conn: &PgConnection, u_username: &str) -> Option<User> {
+pub fn get_by_username(conn: &PgConnection, u_username: &String) -> Option<User> {
     let db_user = users.filter(username.eq(u_username))
         .limit(1)
         .load::<User>(conn)

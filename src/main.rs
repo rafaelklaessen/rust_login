@@ -1,16 +1,17 @@
-extern crate iron;
+#[macro_use] extern crate iron;
 extern crate iron_sessionstorage;
 extern crate router;
 extern crate staticfile;
 extern crate mount;
+extern crate urlencoded;
 #[macro_use] extern crate diesel;
 extern crate dotenv;
 #[macro_use] extern crate diesel_codegen;
+extern crate rustc_serialize;
 
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
-
 use iron::prelude::*;
 use iron::status;
 use iron::headers::ContentType;
@@ -18,28 +19,17 @@ use iron::modifiers::Header;
 use router::Router;
 use staticfile::Static;
 use mount::Mount;
-
-use diesel::prelude::*;
-use diesel::pg::PgConnection;
-use dotenv::dotenv;
-use std::env;
-
 use iron_sessionstorage::SessionStorage;
 use iron_sessionstorage::backends::SignedCookieBackend;
+use urlencoded::UrlEncodedBody;
 
 pub mod schema;
 pub mod models;
 pub mod users;
 pub mod session;
+pub mod utils;
 
-pub fn establish_connection() -> PgConnection {
-    dotenv().ok();
-
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url))
-}
+use utils::*;
 
 fn index(req: &mut Request) -> IronResult<Response> {
     let mut file = if try!(session::is_logged_in(req)) {
@@ -77,8 +67,30 @@ fn delete_session(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, "Deleted")))
 }
 
+fn register(req: &mut Request) -> IronResult<Response> {
+    let form = iexpect!(req.get_ref::<UrlEncodedBody>().ok(), error("form", "Please provide form data!"));
+    let username = iexpect!(form_field(form, "username"), error("username", "Username is required"));
+    let email = iexpect!(form_field(form, "email"), error("email", "Email is required"));
+    let name = iexpect!(form_field(form, "name"), error("name", "Name is required"));
+    let password = iexpect!(form_field(form, "password"), error("password", "Password is required"));
+
+    let conn = establish_connection();
+    let old_user = users::get_by_username(&conn, &username);
+    if old_user.is_some() {
+        return Ok(Response::with(error("username", "Username taken")));
+    }
+
+    if password.trim().len() < 5 {
+        return Ok(Response::with(error("password", "Password too short!")));
+    }
+
+    Ok(Response::with((status::Ok, username)))
+}
+
 fn main() {
     let mut api_router = Router::new();
+    api_router.post("/register", register, "register");
+    // TODO: Use for login API
     api_router.get("/get_session", get_session, "get_session");
     api_router.get("/set_session", set_session, "set_session");
     api_router.get("/delete_session", delete_session, "delete_session");
