@@ -7,6 +7,7 @@ authors = ["Rafael Klaessen <rafaelklaessen.nl@gmail.com>"]
 iron = "0.5.*"
 router = "*"
 staticfile = "*"
+iron-sessionstorage = "*"
 diesel = { version = "0.15.0", features = ["postgres"] }
 diesel_codegen = { version = "0.15.0", features = ["postgres"] }
 dotenv = "0.9.0"

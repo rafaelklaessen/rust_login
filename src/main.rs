@@ -1,4 +1,5 @@
 extern crate iron;
+extern crate iron_sessionstorage;
 extern crate router;
 extern crate staticfile;
 extern crate mount;
@@ -22,6 +23,10 @@ use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use dotenv::dotenv;
 use std::env;
+
+use iron_sessionstorage::traits::*;
+use iron_sessionstorage::SessionStorage;
+use iron_sessionstorage::backends::SignedCookieBackend;
 
 pub mod schema;
 pub mod models;
@@ -59,9 +64,35 @@ fn index(_req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, Header(ContentType::html()), contents)))
 }
 
+struct Username(String);
+
+impl iron_sessionstorage::Value for Username {
+    fn get_key() -> &'static str { "username" }
+    fn into_raw(self) -> String { self.0 }
+    fn from_raw(value: String) -> Option<Self> {
+        Some(Username(value))
+    }
+}
+
+fn get_session(req: &mut Request) -> IronResult<Response> {
+    let session = match try!(req.session().get::<Username>()) {
+        Some(username) => username.0,
+        None => String::from("No session")
+    };
+
+    Ok(Response::with((status::Ok, session)))
+}
+
+fn set_session(req: &mut Request) -> IronResult<Response> {
+    try!(req.session().set(Username(String::from("le epic"))));
+    Ok(Response::with((status::Ok, "set")))
+}
+
 fn main() {
     let mut router = Router::new();
     router.get("/", index, "index");
+    router.get("/get_session", get_session, "get_session");
+    router.get("/set_session", set_session, "set_session");
 
     use schema::posts::dsl::*;
 
@@ -80,10 +111,14 @@ fn main() {
 
     let post = create_post(&connection, "title", "kees");
 
+    let my_secret = b"verysecret".to_vec();
+
     let mut mount = Mount::new();
     mount
         .mount("/", router)
         .mount("/public/", Static::new(Path::new("public/")));
 
-    Iron::new(mount).http("localhost:3000").unwrap();
+    let mut ch = Chain::new(mount);
+    ch.link_around(SessionStorage::new(SignedCookieBackend::new(my_secret)));
+    let _res = Iron::new(ch).http("localhost:3000");
 }
