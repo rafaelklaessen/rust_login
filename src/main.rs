@@ -8,6 +8,7 @@ extern crate urlencoded;
 extern crate dotenv;
 #[macro_use] extern crate diesel_codegen;
 extern crate rustc_serialize;
+extern crate regex;
 
 use std::path::Path;
 use std::fs::File;
@@ -22,6 +23,7 @@ use mount::Mount;
 use iron_sessionstorage::SessionStorage;
 use iron_sessionstorage::backends::SignedCookieBackend;
 use urlencoded::UrlEncodedBody;
+use regex::Regex;
 
 pub mod schema;
 pub mod models;
@@ -80,13 +82,16 @@ fn register(req: &mut Request) -> IronResult<Response> {
         return Ok(Response::with(error("username", "Username taken")));
     }
 
+    let email_regex = Regex::new(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$").unwrap();
+    if !email_regex.is_match(&email[..]) {
+        return Ok(Response::with(error("email", "Invalid email")));
+    }
+
     if password.len() < 5 {
         return Ok(Response::with(error("password", "Password too short!")));
     }
 
-    let user = users::create_user(&conn, username, email, name, password);
-    println!("created user: {:?}", user);
-
+    let _user = users::create_user(&conn, username, email, name, password);
     Ok(Response::with(success()))
 }
 
