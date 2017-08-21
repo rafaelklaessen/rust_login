@@ -12,7 +12,7 @@ pub fn create_user<'a>(conn: &PgConnection, u_username: &String, u_email: String
         username: u_username.clone().to_owned(),
         email: u_email,
         name: u_name,
-        password: hash(&u_password[..], DEFAULT_COST).unwrap()
+        password: hash(&u_password, DEFAULT_COST).unwrap()
     };
 
     diesel::insert(&new_user)

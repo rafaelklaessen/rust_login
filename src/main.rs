@@ -25,6 +25,7 @@ use iron_sessionstorage::SessionStorage;
 use iron_sessionstorage::backends::SignedCookieBackend;
 use urlencoded::UrlEncodedBody;
 use regex::Regex;
+use bcrypt::verify;
 
 pub mod schema;
 pub mod models;
@@ -90,7 +91,7 @@ fn register(req: &mut Request) -> IronResult<Response> {
     }
 
     let email_regex = Regex::new(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$").unwrap();
-    if !email_regex.is_match(&email[..]) {
+    if !email_regex.is_match(&email) {
         return Ok(Response::with(error("email", "Invalid email")));
     }
 
@@ -99,9 +100,35 @@ fn register(req: &mut Request) -> IronResult<Response> {
     }
 
     let _user = users::create_user(&conn, &username, email, name, password);
-    session::set_username(req, username).unwrap();
+    try!(session::set_username(req, username));
 
     Ok(Response::with(success()))
+}
+
+fn login(req: &mut Request) -> IronResult<Response> {
+    let username;
+    let password;
+    {
+        let form = iexpect!(req.get_ref::<UrlEncodedBody>().ok(), error("form", "Please provide form data!"));
+        username = iexpect!(form_field(form, "username"), error("username", "Username is required"));
+        password = iexpect!(form_field(form, "password"), error("password", "Password is required"));
+    }
+
+    let conn = establish_connection();
+    let user = users::get_by_username(&conn, &username);
+    if user.is_none() {
+        return Ok(Response::with(error("username", "User doesn't exist")));
+    }
+    let user = user.unwrap();
+
+    let valid = verify(&password, &user.password).unwrap();
+
+    if valid {
+        try!(session::set_username(req, user.username));
+        Ok(Response::with(success()))
+    } else {
+        Ok(Response::with(error("password", "Incorrect password")))
+    }
 }
 
 fn logout(req: &mut Request) -> IronResult<Response> {
@@ -112,6 +139,7 @@ fn logout(req: &mut Request) -> IronResult<Response> {
 fn main() {
     let mut api_router = Router::new();
     api_router.post("/register", register, "register");
+    api_router.post("/login", login, "login");
     api_router.post("/logout", logout, "logout");
     // TODO: Use for login API
     api_router.get("/get_session", get_session, "get_session");
