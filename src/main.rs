@@ -80,11 +80,14 @@ fn register(req: &mut Request) -> IronResult<Response> {
         return Ok(Response::with(error("username", "Username taken")));
     }
 
-    if password.trim().len() < 5 {
+    if password.len() < 5 {
         return Ok(Response::with(error("password", "Password too short!")));
     }
 
-    Ok(Response::with((status::Ok, username)))
+    let user = users::create_user(&conn, username, email, name, password);
+    println!("created user: {:?}", user);
+
+    Ok(Response::with(success()))
 }
 
 fn main() {

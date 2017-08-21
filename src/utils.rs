@@ -9,16 +9,20 @@ use dotenv::dotenv;
 use std::env;
 
 #[derive(RustcEncodable)]
+pub struct Success {
+    pub success: bool,
+}
+
+#[derive(RustcEncodable)]
 pub struct Error {
     pub error_type: String,
     pub error_description: String,
 }
 
-pub fn form_field(form: &HashMap<String, Vec<String>>, field: &str) -> Option<String> {
-    match form.get(field) {
-        Some(value) => Some(value[0].to_owned()),
-        None => None
-    }
+pub fn success() -> (status::Status, Header<ContentType>, String) {
+    let success = Success { success: true };
+    let json = json::encode(&success).unwrap();
+    (status::Ok, Header(ContentType::json()), json)
 }
 
 pub fn error(error_type: &str, error_msg: &str) -> (status::Status, Header<ContentType>, String) {
@@ -28,6 +32,20 @@ pub fn error(error_type: &str, error_msg: &str) -> (status::Status, Header<Conte
     };
     let json = json::encode(&error).unwrap();
     (status::BadRequest, Header(ContentType::json()), json)
+}
+
+pub fn form_field(form: &HashMap<String, Vec<String>>, field: &str) -> Option<String> {
+    match form.get(field) {
+        Some(value) => {
+            let val = value[0].to_owned();
+            if val.trim().is_empty() {
+                return None;
+            } else {
+                return Some(val);
+            }
+        },
+        None => None
+    }
 }
 
 pub fn establish_connection() -> PgConnection {

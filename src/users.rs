@@ -7,7 +7,7 @@ use models::{User, NewUser};
 use schema::users;
 use schema::users::dsl::*;
 
-pub fn create_user<'a>(conn: &PgConnection, u_username: &'a str, u_email: &'a str, u_name: &'a str, u_password: &'a str) -> Result<User, Error> {
+pub fn create_user<'a>(conn: &PgConnection, u_username: String, u_email: String, u_name: String, u_password: String) -> Result<User, Error> {
     let new_user = NewUser {
         username: u_username,
         email: u_email,

@@ -1,6 +1,7 @@
 import React from 'react';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
+import RequestUtils from '../../utils/RequestUtils';
 
 export default class RegisterForm extends React.Component {
   state = {
@@ -21,7 +22,26 @@ export default class RegisterForm extends React.Component {
 
   onSubmit = (e) => {
     e.preventDefault();
-    alert('form submit');
+
+    const { username, email, name, password } = this.state;
+    RequestUtils.apiRequest('register', {
+        username,
+        email,
+        name,
+        password
+      }).then((json) => {
+        if (json.success) {
+          location.reload();
+        } else {
+          this.setState({
+            usernameError: '',
+            emailError: '',
+            nameError: '',
+            passwordError: '',
+            [json.error_type + 'Error']: json.error_description
+          });
+        }
+      });
   }
 
   render() {

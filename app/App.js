@@ -1,4 +1,5 @@
 import React from 'react';
+import 'whatwg-fetch';
 import glamorous from 'glamorous';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import AppBar from 'material-ui/AppBar';
