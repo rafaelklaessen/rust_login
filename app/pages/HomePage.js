@@ -1,7 +1,7 @@
 import React from 'react';
 import glamorous from 'glamorous';
-import AppBar from 'material-ui/AppBar';
 import LoginForm from '../components/home/LoginForm';
+import RegisterForm from '../components/home/RegisterForm';
 
 const Col = glamorous.div({
   float: 'left',
@@ -12,16 +12,12 @@ const Col = glamorous.div({
 
 const HomePage = () => (
   <div>
-    <AppBar
-      title="Rust login"
-      iconElementLeft={<span />}
-    />
     <div>
       <Col>
         <LoginForm />
       </Col>
       <Col>
-        <h1>Register</h1>
+        <RegisterForm />
       </Col>
     </div>
   </div>

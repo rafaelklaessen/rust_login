@@ -2,23 +2,24 @@ import React from 'react';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 
-export default class LoginForm extends React.Component {
+export default class RegisterForm extends React.Component {
   state = {
     username: '',
+    email: '',
+    name: '',
     password: '',
     usernameError: '',
+    emailError: '',
+    nameError: '',
     passwordError: ''
   };
 
-  handleUsernameChange = (e) => {
-    this.setState({ username: e.target.value });
+  handleChange = (e) => {
+    const target = e.target;
+    this.setState({ [target.name]: target.value });
   }
 
-  handlePasswordChange = (e) => {
-    this.setState({ password: e.target.value });
-  }
-
-  onSubmit(e) {
+  onSubmit = (e) => {
     e.preventDefault();
     alert('form submit');
   }
@@ -26,23 +27,43 @@ export default class LoginForm extends React.Component {
   render() {
     return (
       <div>
-        <h1>Login</h1>
+        <h1>Register</h1>
         <form
           onSubmit={this.onSubmit}
           style={{ width: '50%' }}
         >
           <TextField
             floatingLabelText="Username"
+            name="username"
             value={this.state.username}
-            onChange={this.handleUsernameChange}
+            onChange={this.handleChange}
             errorText={this.state.usernameError}
             fullWidth
           />
           <br />
           <TextField
+            floatingLabelText="Email"
+            name="email"
+            value={this.state.email}
+            onChange={this.handleChange}
+            errorText={this.state.emailError}
+            fullWidth
+          />
+          <br />
+          <TextField
+            floatingLabelText="Name"
+            name="name"
+            value={this.state.name}
+            onChange={this.handleChange}
+            errorText={this.state.nameError}
+            fullWidth
+          />
+          <br />
+          <TextField
             floatingLabelText="Password"
+            name="password"
             value={this.state.password}
-            onChange={this.handlePasswordChange}
+            onChange={this.handleChange}
             errorText={this.state.passwordError}
             type="password"
             fullWidth
@@ -50,7 +71,7 @@ export default class LoginForm extends React.Component {
           <br />
           <br />
           <RaisedButton
-            label="Login"
+            label="Register"
             onClick={this.onSubmit}
             secondary
             fullWidth
