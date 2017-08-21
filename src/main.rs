@@ -30,22 +30,7 @@ use iron_sessionstorage::backends::SignedCookieBackend;
 
 pub mod schema;
 pub mod models;
-
-use models::{Post, NewPost};
-
-pub fn create_post<'a>(conn: &PgConnection, title: &'a str, body: &'a str) -> Post {
-    use schema::posts;
-
-    let new_post = NewPost {
-        title: title,
-        body: body,
-        published: true
-    };
-
-    diesel::insert(&new_post).into(posts::table)
-        .get_result(conn)
-        .expect("Error saving new post")
-}
+pub mod users;
 
 pub fn establish_connection() -> PgConnection {
     dotenv().ok();
@@ -94,22 +79,8 @@ fn main() {
     router.get("/get_session", get_session, "get_session");
     router.get("/set_session", set_session, "set_session");
 
-    use schema::posts::dsl::*;
-
     let connection = establish_connection();
-    let results = posts.filter(published.eq(true))
-        .limit(5)
-        .load::<Post>(&connection)
-        .expect("Error loading posts");
-
-    println!("Displaying {} posts", results.len());
-    for post in results {
-        println!("{}", post.title);
-        println!("----------\n");
-        println!("{}", post.body);
-    }
-
-    let post = create_post(&connection, "title", "kees");
+    let _user = users::create_user(&connection, "title", "kees", "Henk", "password");
 
     let my_secret = b"verysecret".to_vec();
 
