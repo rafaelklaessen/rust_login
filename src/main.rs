@@ -71,11 +71,17 @@ fn delete_session(req: &mut Request) -> IronResult<Response> {
 }
 
 fn register(req: &mut Request) -> IronResult<Response> {
-    let form = iexpect!(req.get_ref::<UrlEncodedBody>().ok(), error("form", "Please provide form data!"));
-    let username = iexpect!(form_field(form, "username"), error("username", "Username is required"));
-    let email = iexpect!(form_field(form, "email"), error("email", "Email is required"));
-    let name = iexpect!(form_field(form, "name"), error("name", "Name is required"));
-    let password = iexpect!(form_field(form, "password"), error("password", "Password is required"));
+    let username;
+    let email;
+    let name;
+    let password;
+    {
+        let form = iexpect!(req.get_ref::<UrlEncodedBody>().ok(), error("form", "Please provide form data!"));
+        username = iexpect!(form_field(form, "username"), error("username", "Username is required"));
+        email = iexpect!(form_field(form, "email"), error("email", "Email is required"));
+        name = iexpect!(form_field(form, "name"), error("name", "Name is required"));
+        password = iexpect!(form_field(form, "password"), error("password", "Password is required"));
+    }
 
     let conn = establish_connection();
     let old_user = users::get_by_username(&conn, &username);
@@ -92,13 +98,21 @@ fn register(req: &mut Request) -> IronResult<Response> {
         return Ok(Response::with(error("password", "Password too short!")));
     }
 
-    let _user = users::create_user(&conn, username, email, name, password);
+    let _user = users::create_user(&conn, &username, email, name, password);
+    session::set_username(req, username).unwrap();
+
     Ok(Response::with(success()))
+}
+
+fn logout(req: &mut Request) -> IronResult<Response> {
+    try!(session::delete_username(req));
+    Ok(Response::with((status::Ok, success())))
 }
 
 fn main() {
     let mut api_router = Router::new();
     api_router.post("/register", register, "register");
+    api_router.post("/logout", logout, "logout");
     // TODO: Use for login API
     api_router.get("/get_session", get_session, "get_session");
     api_router.get("/set_session", set_session, "set_session");

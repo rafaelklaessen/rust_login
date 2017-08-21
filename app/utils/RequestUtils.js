@@ -10,6 +10,7 @@ export default class RequestUtils {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
+        credentials: 'include',
         method: 'post',
         body: formurlencoded(data)
       })
