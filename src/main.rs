@@ -24,13 +24,13 @@ use diesel::pg::PgConnection;
 use dotenv::dotenv;
 use std::env;
 
-use iron_sessionstorage::traits::*;
 use iron_sessionstorage::SessionStorage;
 use iron_sessionstorage::backends::SignedCookieBackend;
 
 pub mod schema;
 pub mod models;
 pub mod users;
+pub mod session;
 
 pub fn establish_connection() -> PgConnection {
     dotenv().ok();
@@ -41,55 +41,57 @@ pub fn establish_connection() -> PgConnection {
         .expect(&format!("Error connecting to {}", database_url))
 }
 
-fn index(_req: &mut Request) -> IronResult<Response> {
-    let mut file = File::open("public/index.html").unwrap();
+fn index(req: &mut Request) -> IronResult<Response> {
+    let mut file = if try!(session::is_logged_in(req)) {
+        File::open("public/session_index.html").unwrap()
+    } else {
+        File::open("public/index.html").unwrap()
+    };
+
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
 
     Ok(Response::with((status::Ok, Header(ContentType::html()), contents)))
 }
 
-struct Username(String);
-
-impl iron_sessionstorage::Value for Username {
-    fn get_key() -> &'static str { "username" }
-    fn into_raw(self) -> String { self.0 }
-    fn from_raw(value: String) -> Option<Self> {
-        Some(Username(value))
-    }
-}
-
 fn get_session(req: &mut Request) -> IronResult<Response> {
-    let session = match try!(req.session().get::<Username>()) {
-        Some(username) => username.0,
-        None => String::from("No session")
+    let session = if try!(session::is_logged_in(req)) {
+        session::get_username(req)
+            .unwrap()
+            .unwrap()
+            .to_string()
+    } else {
+        String::from("No session")
     };
 
     Ok(Response::with((status::Ok, session)))
 }
 
 fn set_session(req: &mut Request) -> IronResult<Response> {
-    try!(req.session().set(Username(String::from("le epic"))));
+    try!(session::set_username(req, String::from("eh lemme")));
     Ok(Response::with((status::Ok, "set")))
 }
 
+fn delete_session(req: &mut Request) -> IronResult<Response> {
+    try!(session::delete_username(req));
+    Ok(Response::with((status::Ok, "Deleted")))
+}
+
 fn main() {
-    let mut router = Router::new();
-    router.get("/", index, "index");
-    router.get("/get_session", get_session, "get_session");
-    router.get("/set_session", set_session, "set_session");
+    let mut api_router = Router::new();
+    api_router.get("/get_session", get_session, "get_session");
+    api_router.get("/set_session", set_session, "set_session");
+    api_router.get("/delete_session", delete_session, "delete_session");
 
-    let connection = establish_connection();
-    let _user = users::create_user(&connection, "title", "kees", "Henk", "password");
-
-    let my_secret = b"verysecret".to_vec();
+    let session_secret = b"verysecret".to_vec();
 
     let mut mount = Mount::new();
     mount
-        .mount("/", router)
+        .mount("/", index)
+        .mount("/api/", api_router)
         .mount("/public/", Static::new(Path::new("public/")));
 
     let mut ch = Chain::new(mount);
-    ch.link_around(SessionStorage::new(SignedCookieBackend::new(my_secret)));
+    ch.link_around(SessionStorage::new(SignedCookieBackend::new(session_secret)));
     let _res = Iron::new(ch).http("localhost:3000");
 }
