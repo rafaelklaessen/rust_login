@@ -48,29 +48,6 @@ fn index(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, Header(ContentType::html()), contents)))
 }
 
-fn get_session(req: &mut Request) -> IronResult<Response> {
-    let session = if try!(session::is_logged_in(req)) {
-        session::get_username(req)
-            .unwrap()
-            .unwrap()
-            .to_string()
-    } else {
-        String::from("No session")
-    };
-
-    Ok(Response::with((status::Ok, session)))
-}
-
-fn set_session(req: &mut Request) -> IronResult<Response> {
-    try!(session::set_username(req, String::from("eh lemme")));
-    Ok(Response::with((status::Ok, "set")))
-}
-
-fn delete_session(req: &mut Request) -> IronResult<Response> {
-    try!(session::delete_username(req));
-    Ok(Response::with((status::Ok, "Deleted")))
-}
-
 fn register(req: &mut Request) -> IronResult<Response> {
     let username;
     let email;
@@ -141,10 +118,6 @@ fn main() {
     api_router.post("/register", register, "register");
     api_router.post("/login", login, "login");
     api_router.post("/logout", logout, "logout");
-    // TODO: Use for login API
-    api_router.get("/get_session", get_session, "get_session");
-    api_router.get("/set_session", set_session, "set_session");
-    api_router.get("/delete_session", delete_session, "delete_session");
 
     let session_secret = b"verysecret".to_vec();
 
