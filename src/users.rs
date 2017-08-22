@@ -7,7 +7,7 @@ use schema::users;
 use schema::users::dsl::*;
 use bcrypt::{DEFAULT_COST, hash};
 
-pub fn create_user<'a>(conn: &PgConnection, u_username: &String, u_email: String, u_name: String, u_password: String) -> Result<User, Error> {
+pub fn create_user(conn: &PgConnection, u_username: &String, u_email: String, u_name: String, u_password: String) -> Result<User, Error> {
     let new_user = NewUser {
         username: u_username.clone().to_owned(),
         email: u_email,
@@ -18,6 +18,24 @@ pub fn create_user<'a>(conn: &PgConnection, u_username: &String, u_email: String
     diesel::insert(&new_user)
         .into(users::table)
         .get_result(conn)
+}
+
+pub fn update_user(conn: &PgConnection, old_user: User, u_username: String, u_email: String, u_name: String, u_password: String) -> Result<User, Error> {
+    let mut new_password = u_password;
+    if new_password.is_empty() {
+        new_password = old_user.password;
+    } else {
+        new_password = hash(&new_password, DEFAULT_COST).unwrap();
+    }
+
+    diesel::update(users.filter(username.eq(old_user.username)))
+        .set((
+            username.eq(u_username),
+            email.eq(u_email),
+            name.eq(u_name),
+            password.eq(new_password),
+        ))
+        .get_result::<User>(conn)
 }
 
 pub fn get_user(conn: &PgConnection, user_id: i32) -> Option<User> {

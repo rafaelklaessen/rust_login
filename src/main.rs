@@ -132,12 +132,64 @@ fn get_user(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with(json(user)))
 }
 
+fn update_user(req: &mut Request) -> IronResult<Response> {
+    let username;
+    {
+        username = try!(session::get_username(req));
+    }
+
+    if username.is_none() {
+        return Ok(Response::with(error("auth", "Not logged in!")));
+    }
+
+    let conn = establish_connection();
+    let old_user = users::get_by_username(&conn, &username.unwrap().to_string());
+
+    if old_user.is_none() {
+        return Ok(Response::with(error("auth", "Not logged in as existing user!")));
+    }
+
+    let old_user = old_user.unwrap();
+
+    let username;
+    let email;
+    let name;
+    let password;
+    {
+        let form = iexpect!(req.get_ref::<UrlEncodedBody>().ok(), error("form", "Please provide form data!"));
+        username = iexpect!(form_field(form, "username"), error("username", "Username is required"));
+        email = iexpect!(form_field(form, "email"), error("email", "Email is required"));
+        name = iexpect!(form_field(form, "name"), error("name", "Name is required"));
+        password = form_field(form, "password").unwrap_or("".to_owned());
+    }
+
+    let existing_user = users::get_by_username(&conn, &username);
+    if old_user.username != username && existing_user.is_some() {
+        return Ok(Response::with(error("username", "Username taken")));
+    }
+
+    let email_regex = Regex::new(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$").unwrap();
+    if !email_regex.is_match(&email) {
+        return Ok(Response::with(error("email", "Invalid email")));
+    }
+
+    if !password.is_empty() && password.len() < 5 {
+        return Ok(Response::with(error("password", "Password too short!")));
+    }
+
+    let user = users::update_user(&conn, old_user, username, email, name, password).unwrap();
+    try!(session::set_username(req, user.username));
+
+    Ok(Response::with(success()))
+}
+
 fn main() {
     let mut api_router = Router::new();
     api_router.post("/register", register, "register");
     api_router.post("/login", login, "login");
     api_router.post("/logout", logout, "logout");
     api_router.get("/get_user", get_user, "get_user");
+    api_router.post("/update_user", update_user, "update_user");
 
     let session_secret = b"verysecret".to_vec();
 

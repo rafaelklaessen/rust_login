@@ -25,7 +25,7 @@ const simpleForm = (title, apiUrl, fields, fieldDefaults = {}) => class extends 
     e.preventDefault();
 
     RequestUtils.apiRequest(apiUrl, this.state).then((json) => {
-      if (json.success) {
+      if (json.success || json.error_type == 'auth') {
         location.reload();
       } else {
         const errorState = {};
