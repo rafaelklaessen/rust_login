@@ -9,6 +9,7 @@ use bcrypt::{DEFAULT_COST, hash};
 
 pub mod session;
 pub mod api;
+pub mod validations;
 
 pub fn create(conn: &PgConnection, u_username: &String, u_email: String, u_name: String, u_password: String) -> Result<User, Error> {
     let new_user = NewUser {

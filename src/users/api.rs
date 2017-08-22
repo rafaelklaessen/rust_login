@@ -1,9 +1,9 @@
 use iron::prelude::*;
 use iron::status;
-use regex::Regex;
 use bcrypt::verify;
 use rustc_serialize::json;
 use ::utils::*;
+use super::validations::*;
 use super::session;
 use ::users;
 
@@ -15,17 +15,16 @@ pub fn register(req: &mut Request) -> IronResult<Response> {
     let password = iexpect!(form_field(&form, "password"), error("password", "Password is required"));
 
     let conn = establish_connection();
-    let old_user = users::get(&conn, &username);
-    if old_user.is_some() {
+
+    if !unused_username(&conn, &username) {
         return Ok(Response::with(error("username", "Username taken")));
     }
 
-    let email_regex = Regex::new(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$").unwrap();
-    if !email_regex.is_match(&email) {
+    if !valid_email(&email) {
         return Ok(Response::with(error("email", "Invalid email")));
     }
 
-    if password.len() < 5 {
+    if !valid_password(&password) {
         return Ok(Response::with(error("password", "Password too short!")));
     }
 
@@ -68,27 +67,19 @@ pub fn get(req: &mut Request) -> IronResult<Response> {
 
     let conn = establish_connection();
     let user = users::get(&conn, &username.to_string());
+    let user = iexpect!(user, error("auth", "Not logged in as existing user!"));
 
-    if user.is_none() {
-        return Ok(Response::with(error("auth", "Not logged in as existing user!")));
-    }
-
-    let user = json::encode(&user.unwrap()).unwrap();
+    let user = json::encode(&user).unwrap();
     Ok(Response::with(json(user)))
 }
 
 pub fn update(req: &mut Request) -> IronResult<Response> {
     let username = try!(session::get_username(req));
-    let username = iexpect!(username, error("auth", "Not loggede in!"));
+    let username = iexpect!(username, error("auth", "Not logged in!"));
 
     let conn = establish_connection();
     let old_user = users::get(&conn, &username.to_string());
-
-    if old_user.is_none() {
-        return Ok(Response::with(error("auth", "Not logged in as existing user!")));
-    }
-
-    let old_user = old_user.unwrap();
+    let old_user = iexpect!(old_user, error("auth", "Not logged in as existing user!"));
 
     let form = iexpect!(get_form(req), error("form", "Please provide form data!"));
     let username = iexpect!(form_field(&form, "username"), error("username", "Username is required"));
@@ -101,12 +92,11 @@ pub fn update(req: &mut Request) -> IronResult<Response> {
         return Ok(Response::with(error("username", "Username taken")));
     }
 
-    let email_regex = Regex::new(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$").unwrap();
-    if !email_regex.is_match(&email) {
+    if !valid_email(&email) {
         return Ok(Response::with(error("email", "Invalid email")));
     }
 
-    if !password.is_empty() && password.len() < 5 {
+    if !password.is_empty() && !valid_password(&password) {
         return Ok(Response::with(error("password", "Password too short!")));
     }
 
@@ -122,9 +112,7 @@ pub fn delete(req: &mut Request) -> IronResult<Response> {
 
     let conn = establish_connection();
     let old_user = users::get(&conn, &username.to_string());
-    if old_user.is_none() {
-        return Ok(Response::with(error("auth", "Not logged in as existing user!")));
-    }
+    let _old_user = iexpect!(old_user, error("auth", "Not logged in as existing user!"));
 
     let _user = users::delete(&conn, username.to_string());
     try!(session::delete_username(req));
