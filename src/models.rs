@@ -1,6 +1,6 @@
 use super::schema::users;
 
-#[derive(Queryable)]
+#[derive(Queryable, RustcEncodable)]
 pub struct User {
     pub id: i32,
     pub username: String,

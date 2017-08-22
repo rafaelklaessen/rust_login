@@ -21,8 +21,8 @@ pub struct Error {
 
 pub fn success() -> (status::Status, Header<ContentType>, String) {
     let success = Success { success: true };
-    let json = json::encode(&success).unwrap();
-    (status::Ok, Header(ContentType::json()), json)
+    let success = json::encode(&success).unwrap();
+    json(success)
 }
 
 pub fn error(error_type: &str, error_msg: &str) -> (status::Status, Header<ContentType>, String) {
@@ -30,8 +30,16 @@ pub fn error(error_type: &str, error_msg: &str) -> (status::Status, Header<Conte
         error_type: error_type.to_owned(),
         error_description: error_msg.to_string()
     };
-    let json = json::encode(&error).unwrap();
-    (status::BadRequest, Header(ContentType::json()), json)
+    let error = json::encode(&error).unwrap();
+    json_with_status(status::BadRequest, error)
+}
+
+pub fn json_with_status(status: status::Status, json: String) -> (status::Status, Header<ContentType>, String) {
+    (status, Header(ContentType::json()), json)
+}
+
+pub fn json(json: String) -> (status::Status, Header<ContentType>, String) {
+    json_with_status(status::Ok, json)
 }
 
 pub fn form_field(form: &HashMap<String, Vec<String>>, field: &str) -> Option<String> {

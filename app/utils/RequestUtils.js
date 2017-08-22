@@ -1,18 +1,22 @@
 const formurlencoded = require('form-urlencoded');
 
 export default class RequestUtils {
-  static apiRequest(url, data = {}) {
-    return this.request(`/api/${url}`, data);
+  static apiGetRequest(url, data = {}) {
+return this.request(`/api/${url}`, 'get', data);
   }
 
-  static request(url, data = {}) {
+  static apiRequest(url, data = {}) {
+    return this.request(`/api/${url}`, 'post', data);
+  }
+
+  static request(url, method, data = {}) {
     return fetch(url, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
         credentials: 'include',
-        method: 'post',
-        body: formurlencoded(data)
+        method,
+        body: formurlencoded(data) || null
       })
       .then((response) => response.json());
   }

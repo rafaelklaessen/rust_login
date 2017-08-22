@@ -26,6 +26,7 @@ use iron_sessionstorage::backends::SignedCookieBackend;
 use urlencoded::UrlEncodedBody;
 use regex::Regex;
 use bcrypt::verify;
+use rustc_serialize::json;
 
 pub mod schema;
 pub mod models;
@@ -113,11 +114,30 @@ fn logout(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, success())))
 }
 
+fn get_user(req: &mut Request) -> IronResult<Response> {
+    let username = try!(session::get_username(req));
+
+    if username.is_none() {
+        return Ok(Response::with(error("auth", "Not logged in!")));
+    }
+
+    let conn = establish_connection();
+    let user = users::get_by_username(&conn, &username.unwrap().to_string());
+
+    if user.is_none() {
+        return Ok(Response::with(error("auth", "Not logged in as existing user!")));
+    }
+
+    let user = json::encode(&user).unwrap();
+    Ok(Response::with(json(user)))
+}
+
 fn main() {
     let mut api_router = Router::new();
     api_router.post("/register", register, "register");
     api_router.post("/login", login, "login");
     api_router.post("/logout", logout, "logout");
+    api_router.get("/get_user", get_user, "get_user");
 
     let session_secret = b"verysecret".to_vec();
 
