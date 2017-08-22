@@ -116,34 +116,25 @@ fn logout(req: &mut Request) -> IronResult<Response> {
 
 fn get_user(req: &mut Request) -> IronResult<Response> {
     let username = try!(session::get_username(req));
-
-    if username.is_none() {
-        return Ok(Response::with(error("auth", "Not logged in!")));
-    }
+    let username = iexpect!(username, error("auth", "Not loggede in!"));
 
     let conn = establish_connection();
-    let user = users::get_by_username(&conn, &username.unwrap().to_string());
+    let user = users::get_by_username(&conn, &username.to_string());
 
     if user.is_none() {
         return Ok(Response::with(error("auth", "Not logged in as existing user!")));
     }
 
-    let user = json::encode(&user).unwrap();
+    let user = json::encode(&user.unwrap()).unwrap();
     Ok(Response::with(json(user)))
 }
 
 fn update_user(req: &mut Request) -> IronResult<Response> {
-    let username;
-    {
-        username = try!(session::get_username(req));
-    }
-
-    if username.is_none() {
-        return Ok(Response::with(error("auth", "Not logged in!")));
-    }
+    let username = try!(session::get_username(req));
+    let username = iexpect!(username, error("auth", "Not loggede in!"));
 
     let conn = establish_connection();
-    let old_user = users::get_by_username(&conn, &username.unwrap().to_string());
+    let old_user = users::get_by_username(&conn, &username.to_string());
 
     if old_user.is_none() {
         return Ok(Response::with(error("auth", "Not logged in as existing user!")));
@@ -184,20 +175,11 @@ fn update_user(req: &mut Request) -> IronResult<Response> {
 }
 
 fn delete_user(req: &mut Request) -> IronResult<Response> {
-    let username;
-    {
-        username = try!(session::get_username(req));
-    }
-
-    if username.is_none() {
-        return Ok(Response::with(error("auth", "Not logged in!")));
-    }
-
-    let username = username.unwrap();
+    let username = try!(session::get_username(req));
+    let username = iexpect!(username, error("auth", "Not loggede in!"));
 
     let conn = establish_connection();
     let old_user = users::get_by_username(&conn, &username.to_string());
-
     if old_user.is_none() {
         return Ok(Response::with(error("auth", "Not logged in as existing user!")));
     }
