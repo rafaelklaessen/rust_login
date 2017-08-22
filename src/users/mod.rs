@@ -10,7 +10,7 @@ use bcrypt::{DEFAULT_COST, hash};
 pub mod session;
 pub mod api;
 
-pub fn create_user(conn: &PgConnection, u_username: &String, u_email: String, u_name: String, u_password: String) -> Result<User, Error> {
+pub fn create(conn: &PgConnection, u_username: &String, u_email: String, u_name: String, u_password: String) -> Result<User, Error> {
     let new_user = NewUser {
         username: u_username.clone().to_owned(),
         email: u_email,
@@ -23,7 +23,7 @@ pub fn create_user(conn: &PgConnection, u_username: &String, u_email: String, u_
         .get_result(conn)
 }
 
-pub fn update_user(conn: &PgConnection, old_user: User, u_username: String, u_email: String, u_name: String, u_password: String) -> Result<User, Error> {
+pub fn update(conn: &PgConnection, old_user: User, u_username: String, u_email: String, u_name: String, u_password: String) -> Result<User, Error> {
     let mut new_password = u_password;
     if new_password.is_empty() {
         new_password = old_user.password;
@@ -41,26 +41,12 @@ pub fn update_user(conn: &PgConnection, old_user: User, u_username: String, u_em
         .get_result::<User>(conn)
 }
 
-pub fn delete_user(conn: &PgConnection, u_username: String) -> Result<User, Error> {
+pub fn delete(conn: &PgConnection, u_username: String) -> Result<User, Error> {
     diesel::delete(users.filter(username.eq(u_username)))
         .get_result::<User>(conn)
 }
 
-pub fn get_user(conn: &PgConnection, user_id: i32) -> Option<User> {
-    let db_user = users.filter(id.eq(user_id))
-        .limit(1)
-        .load::<User>(conn)
-        .expect("Error loading user");
-
-    let db_user = db_user.get(0);
-
-    match db_user {
-        Some(user) => Some(user.to_owned()),
-        None => None
-    }
-}
-
-pub fn get_by_username(conn: &PgConnection, u_username: &String) -> Option<User> {
+pub fn get(conn: &PgConnection, u_username: &String) -> Option<User> {
     let db_user = users.filter(username.eq(u_username))
         .limit(1)
         .load::<User>(conn)

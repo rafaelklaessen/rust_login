@@ -1,4 +1,5 @@
 use iron::status;
+use iron::prelude::*;
 use iron::headers::ContentType;
 use iron::modifiers::Header;
 use rustc_serialize::json;
@@ -7,6 +8,7 @@ use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use dotenv::dotenv;
 use std::env;
+use urlencoded::UrlEncodedBody;
 
 #[derive(RustcEncodable)]
 pub struct Success {
@@ -40,6 +42,15 @@ pub fn json_with_status(status: status::Status, json: String) -> (status::Status
 
 pub fn json(json: String) -> (status::Status, Header<ContentType>, String) {
     json_with_status(status::Ok, json)
+}
+
+pub fn get_form(req: &mut Request) -> Option<HashMap<String, Vec<String>>> {
+    let form = req.get_ref::<UrlEncodedBody>().ok();
+
+    match form {
+        Some(hashmap) => Some(hashmap.to_owned()),
+        None => None
+    }
 }
 
 pub fn form_field(form: &HashMap<String, Vec<String>>, field: &str) -> Option<String> {

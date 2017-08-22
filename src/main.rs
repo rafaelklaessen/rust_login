@@ -49,9 +49,9 @@ fn main() {
     api_router.post("/register", users::api::register, "register");
     api_router.post("/login", users::api::login, "login");
     api_router.post("/logout", users::api::logout, "logout");
-    api_router.get("/get_user", users::api::get_user, "get_user");
-    api_router.post("/update_user", users::api::update_user, "update_user");
-    api_router.post("/delete_user", users::api::delete_user, "delete_user");
+    api_router.get("/get_user", users::api::get, "get_user");
+    api_router.post("/update_user", users::api::update, "update_user");
+    api_router.post("/delete_user", users::api::delete, "delete_user");
 
     let session_secret = b"verysecret".to_vec();
 
