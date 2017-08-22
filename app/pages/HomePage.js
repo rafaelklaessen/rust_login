@@ -1,6 +1,6 @@
 import React from 'react';
 import glamorous from 'glamorous';
-import simpleForm from '../components/home/simpleForm';
+import simpleForm from '../components/simpleForm';
 
 const Col = glamorous.div({
   float: 'left',

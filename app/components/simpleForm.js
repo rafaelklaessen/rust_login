@@ -2,16 +2,16 @@ import React from 'react';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import { FormContainer, FormTitle, Form } from './Form';
-import RequestUtils from '../../utils/RequestUtils';
+import RequestUtils from '../utils/RequestUtils';
 
-const simpleForm = (title, apiUrl, fields) => class extends React.Component {
+const simpleForm = (title, apiUrl, fields, fieldDefaults = {}) => class extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {};
 
     for (let field of fields) {
-      this.state[field] = '';
+      this.state[field] = fieldDefaults[field] || '';
       this.state[`${field}Error`] = '';
     }
   }

@@ -1,6 +1,9 @@
 import React from 'react';
 import glamorous from 'glamorous';
 import CircularProgress from 'material-ui/CircularProgress';
+import RaisedButton from 'material-ui/RaisedButton';
+import { white, red500 } from 'material-ui/styles/colors';
+import simpleForm from '../components/simpleForm';
 import RequestUtils from '../utils/RequestUtils';
 
 const Container = glamorous.div({
@@ -23,6 +26,20 @@ export default class SettingsPage extends React.Component {
   }
 
   render() {
+    let SettingsForm;
+
+    if (!this.state.loading) {
+      const defaults = this.state.user;
+      defaults.password = '';
+
+      SettingsForm = simpleForm(
+        'Update settings',
+        'update_user',
+        ['username', 'email', 'name', 'password'],
+        defaults
+      );
+    }
+
     return (
       <Container>
         {this.state.loading ? (
@@ -30,7 +47,23 @@ export default class SettingsPage extends React.Component {
             <CircularProgress />
           </div>
         ) : (
-          <h1>Settings for {this.state.user.name}</h1>
+          <div>
+            <h1>Settings for {this.state.user.name}</h1>
+            <SettingsForm />
+            <br />
+            <br />
+            <br />
+            <br />
+            <div style={{ width: '50%' }}>
+              <RaisedButton
+                label="Delete account"
+                labelColor={white}
+                backgroundColor={red500}
+                onClick={this.onDelete}
+                fullWidth
+              />
+            </div>
+          </div>
         )}
       </Container>
     );
