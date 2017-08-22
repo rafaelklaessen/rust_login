@@ -7,6 +7,9 @@ use schema::users;
 use schema::users::dsl::*;
 use bcrypt::{DEFAULT_COST, hash};
 
+pub mod session;
+pub mod api;
+
 pub fn create_user(conn: &PgConnection, u_username: &String, u_email: String, u_name: String, u_password: String) -> Result<User, Error> {
     let new_user = NewUser {
         username: u_username.clone().to_owned(),
