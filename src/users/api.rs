@@ -63,7 +63,7 @@ pub fn logout(req: &mut Request) -> IronResult<Response> {
 
 pub fn get(req: &mut Request) -> IronResult<Response> {
     let username = try!(session::get_username(req));
-    let username = iexpect!(username, error("auth", "Not loggede in!"));
+    let username = iexpect!(username, error("auth", "Not logged in!"));
 
     let conn = establish_connection();
     let user = users::get(&conn, &username.to_string());
@@ -108,7 +108,7 @@ pub fn update(req: &mut Request) -> IronResult<Response> {
 
 pub fn delete(req: &mut Request) -> IronResult<Response> {
     let username = try!(session::get_username(req));
-    let username = iexpect!(username, error("auth", "Not loggede in!"));
+    let username = iexpect!(username, error("auth", "Not logged in!"));
 
     let conn = establish_connection();
     let old_user = users::get(&conn, &username.to_string());

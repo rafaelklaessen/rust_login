@@ -36,17 +36,16 @@ pub fn error(error_type: &str, error_msg: &str) -> (status::Status, Header<Conte
     json_with_status(status::BadRequest, error)
 }
 
-pub fn json_with_status(status: status::Status, json: String) -> (status::Status, Header<ContentType>, String) {
-    (status, Header(ContentType::json()), json)
-}
-
 pub fn json(json: String) -> (status::Status, Header<ContentType>, String) {
     json_with_status(status::Ok, json)
 }
 
+pub fn json_with_status(status: status::Status, json: String) -> (status::Status, Header<ContentType>, String) {
+    (status, Header(ContentType::json()), json)
+}
+
 pub fn get_form(req: &mut Request) -> Option<HashMap<String, Vec<String>>> {
     let form = req.get_ref::<UrlEncodedBody>().ok();
-
     match form {
         Some(hashmap) => Some(hashmap.to_owned()),
         None => None

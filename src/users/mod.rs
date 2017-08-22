@@ -25,12 +25,10 @@ pub fn create(conn: &PgConnection, u_username: &String, u_email: String, u_name:
 }
 
 pub fn update(conn: &PgConnection, old_user: User, u_username: String, u_email: String, u_name: String, u_password: String) -> Result<User, Error> {
-    let mut new_password = u_password;
-    if new_password.is_empty() {
-        new_password = old_user.password;
-    } else {
-        new_password = hash(&new_password, DEFAULT_COST).unwrap();
-    }
+    let new_password = match u_password.is_empty() {
+        true => old_user.password,
+        false => hash(&u_password, DEFAULT_COST).unwrap()
+    };
 
     diesel::update(users.filter(username.eq(old_user.username)))
         .set((

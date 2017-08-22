@@ -18,6 +18,8 @@ export default class SettingsPage extends React.Component {
 
   componentDidMount() {
     RequestUtils.apiGetRequest('get_user').then((user) => {
+      if (user.error_type) location.reload();
+
       this.setState({
         loading: false,
         user

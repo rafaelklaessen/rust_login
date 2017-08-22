@@ -32,10 +32,9 @@ pub mod utils;
 use users::session;
 
 fn index(req: &mut Request) -> IronResult<Response> {
-    let mut file = if try!(session::is_logged_in(req)) {
-        File::open("public/session_index.html").unwrap()
-    } else {
-        File::open("public/index.html").unwrap()
+    let mut file = match try!(session::is_logged_in(req)) {
+        true => File::open("public/session_index.html").unwrap(),
+        false => File::open("public/index.html").unwrap()
     };
 
     let mut contents = String::new();
@@ -63,5 +62,6 @@ fn main() {
 
     let mut ch = Chain::new(mount);
     ch.link_around(SessionStorage::new(SignedCookieBackend::new(session_secret)));
+
     let _res = Iron::new(ch).http("localhost:3000");
 }
