@@ -5,8 +5,8 @@ use iron_sessionstorage::traits::*;
 pub struct Username(pub String);
 
 impl Username {
-    pub fn to_string(self) -> String {
-        self.0
+    pub fn to_string(&self) -> String {
+        self.0.clone()
     }
 
     pub fn is_empty(&self) -> bool {

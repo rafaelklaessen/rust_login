@@ -183,6 +183,31 @@ fn update_user(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with(success()))
 }
 
+fn delete_user(req: &mut Request) -> IronResult<Response> {
+    let username;
+    {
+        username = try!(session::get_username(req));
+    }
+
+    if username.is_none() {
+        return Ok(Response::with(error("auth", "Not logged in!")));
+    }
+
+    let username = username.unwrap();
+
+    let conn = establish_connection();
+    let old_user = users::get_by_username(&conn, &username.to_string());
+
+    if old_user.is_none() {
+        return Ok(Response::with(error("auth", "Not logged in as existing user!")));
+    }
+
+    let _user = users::delete_user(&conn, username.to_string());
+    try!(session::delete_username(req));
+
+    Ok(Response::with(success()))
+}
+
 fn main() {
     let mut api_router = Router::new();
     api_router.post("/register", register, "register");
@@ -190,6 +215,7 @@ fn main() {
     api_router.post("/logout", logout, "logout");
     api_router.get("/get_user", get_user, "get_user");
     api_router.post("/update_user", update_user, "update_user");
+    api_router.post("/delete_user", delete_user, "delete_user");
 
     let session_secret = b"verysecret".to_vec();
 

@@ -38,6 +38,11 @@ pub fn update_user(conn: &PgConnection, old_user: User, u_username: String, u_em
         .get_result::<User>(conn)
 }
 
+pub fn delete_user(conn: &PgConnection, u_username: String) -> Result<User, Error> {
+    diesel::delete(users.filter(username.eq(u_username)))
+        .get_result::<User>(conn)
+}
+
 pub fn get_user(conn: &PgConnection, user_id: i32) -> Option<User> {
     let db_user = users.filter(id.eq(user_id))
         .limit(1)

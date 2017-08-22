@@ -25,6 +25,16 @@ export default class SettingsPage extends React.Component {
     });
   }
 
+  onDelete = (e) => {
+    const prompt = window.prompt("Type your username to confirm account deletion. There is no way back!");
+    const confirmed = prompt == this.state.user.username;
+    if (!confirmed) return;
+
+    RequestUtils.apiRequest('delete_user').then((json) => {
+      location.reload();
+    });
+  }
+
   render() {
     let SettingsForm;
 
